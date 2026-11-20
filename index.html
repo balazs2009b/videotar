@@ -1,0 +1,1678 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Videótár AI — Videóelemző &amp; Tudásbázis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #06080f;
+    --bg-surface: rgba(15, 20, 32, 0.72);
+    --bg-surface-solid: #0f1420;
+    --bg-elevated: rgba(24, 31, 48, 0.85);
+    --bg-input: rgba(9, 12, 20, 0.85);
+    --border-subtle: rgba(148, 163, 184, 0.14);
+    --border-strong: rgba(99, 102, 241, 0.48);
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --accent-primary: #6366f1;
+    --accent-secondary: #8b5cf6;
+    --accent-cyan: #06b6d4;
+    --accent-emerald: #10b981;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+    --shadow-lg: 0 24px 64px -12px rgba(0, 0, 0, 0.65);
+    --radius-lg: 18px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    font: 14.5px/1.6 "Inter", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100dvh;
+    background-image:
+      radial-gradient(55rem 35rem at 8% -5%, rgba(99, 102, 241, 0.16), transparent 60%),
+      radial-gradient(50rem 30rem at 92% 2%, rgba(6, 182, 212, 0.12), transparent 60%),
+      radial-gradient(45rem 35rem at 50% 100%, rgba(139, 92, 246, 0.10), transparent 65%);
+    background-attachment: fixed;
+  }
+
+  /* --- Top Navigation / Header --- */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    background: rgba(6, 8, 15, 0.82);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-cyan));
+    display: grid;
+    place-items: center;
+    font: 700 17px "Space Grotesk", sans-serif;
+    color: #fff;
+    box-shadow: 0 0 24px rgba(99, 102, 241, 0.45);
+  }
+  .brand h1 {
+    margin: 0;
+    font: 700 20px/1.1 "Space Grotesk", sans-serif;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .badge-live {
+    font: 600 10.5px/1 "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 4px 8px;
+    border-radius: 99px;
+    background: rgba(16, 185, 129, 0.14);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.32);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .badge-live::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+  }
+
+  .statok {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-left: auto;
+    align-items: center;
+  }
+  .stat-pill {
+    background: rgba(15, 20, 32, 0.75);
+    border: 1px solid var(--border-subtle);
+    border-radius: 11px;
+    padding: 6px 13px;
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+  }
+  .stat-pill b {
+    font: 700 16px "Space Grotesk", sans-serif;
+    color: var(--text-main);
+  }
+  .stat-pill span {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* --- Buttons & Inputs --- */
+  button {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--radius-md);
+    padding: 10px 18px;
+    font: 600 13.5px "Inter", sans-serif;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    box-shadow: 0 6px 20px -4px rgba(99, 102, 241, 0.45);
+  }
+  button:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 26px -4px rgba(99, 102, 241, 0.6);
+  }
+  button:active:not(:disabled) { transform: translateY(0); }
+  button:disabled { opacity: 0.45; cursor: default; }
+
+  .gomb-masodlagos {
+    background: rgba(24, 31, 48, 0.78);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+    box-shadow: none;
+    padding: 8px 14px;
+    font-size: 12.5px;
+  }
+  .gomb-masodlagos:hover:not(:disabled) {
+    color: var(--text-main);
+    border-color: var(--border-strong);
+    box-shadow: 0 0 16px rgba(99, 102, 241, 0.2);
+  }
+  .gomb-masodlagos.aktiv {
+    background: rgba(99, 102, 241, 0.18);
+    color: #c7d2fe;
+    border-color: var(--accent-primary);
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.2px;
+  }
+
+  textarea, input[type=text], input[type=email], input[type=password] {
+    width: 100%;
+    background: var(--bg-input);
+    color: var(--text-main);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 11px 14px;
+    font: 14.5px/1.5 inherit;
+    resize: vertical;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  textarea::placeholder, input::placeholder { color: var(--text-dim); }
+  textarea:focus, input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+  }
+
+  /* --- 1. Login View --- */
+  #login-wrap {
+    min-height: calc(100dvh - 76px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .login-kartya {
+    width: 100%;
+    max-width: 440px;
+    background: var(--bg-surface);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-strong);
+    border-radius: 22px;
+    padding: 32px 30px;
+    box-shadow: var(--shadow-lg), 0 0 60px -15px rgba(99, 102, 241, 0.3);
+  }
+  .login-kartya h2 {
+    margin: 0 0 8px;
+    font: 700 24px "Space Grotesk", sans-serif;
+    letter-spacing: -0.4px;
+  }
+  .login-kartya p {
+    margin: 0 0 22px;
+    color: var(--text-muted);
+    font-size: 13.5px;
+  }
+  .mezo { margin-bottom: 15px; }
+
+  /* --- 2. Main Layout --- */
+  main {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 24px 28px 80px;
+  }
+
+  .bento-top {
+    display: grid;
+    grid-template-columns: 1.45fr 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 960px) {
+    .bento-top { grid-template-columns: 1fr; }
+  }
+
+  .lap {
+    background: var(--bg-surface);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+    margin-bottom: 18px;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+  .bento-top .lap { margin-bottom: 0; }
+  .lap:focus-within {
+    border-color: var(--border-strong);
+    box-shadow: 0 12px 36px -12px rgba(99, 102, 241, 0.22);
+  }
+
+  .lap-fejlec {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .lap-cim {
+    font: 600 15px "Space Grotesk", sans-serif;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .sor {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* --- Filter Pills & View Switcher --- */
+  .szuro-sor {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .szuro-csoport {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .szuro-cimke {
+    font: 600 11px "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--text-dim);
+    margin-right: 2px;
+  }
+  .szurok {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+  .szuro {
+    background: rgba(9, 12, 20, 0.65);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    border-radius: 99px;
+    padding: 5px 13px;
+    font: 500 12.5px "Inter", sans-serif;
+    cursor: pointer;
+    box-shadow: none;
+    transition: all 0.18s ease;
+  }
+  .szuro:hover:not(:disabled) {
+    border-color: var(--text-muted);
+    color: var(--text-main);
+    transform: none;
+    box-shadow: none;
+  }
+  .szuro.aktiv {
+    border-color: var(--accent-primary);
+    color: #e0e7ff;
+    background: rgba(99, 102, 241, 0.22);
+    box-shadow: 0 0 14px rgba(99, 102, 241, 0.25);
+  }
+  .szuro.plat-aktiv {
+    border-color: var(--accent-cyan);
+    color: #cffafe;
+    background: rgba(6, 182, 212, 0.2);
+    box-shadow: 0 0 14px rgba(6, 182, 212, 0.25);
+  }
+  .rendezes-select {
+    background: rgba(9, 12, 20, 0.85);
+    color: var(--text-main);
+    border: 1px solid var(--border-subtle);
+    border-radius: 99px;
+    padding: 6px 14px;
+    font: 500 12.5px "Inter", sans-serif;
+    cursor: pointer;
+    outline: none;
+  }
+  .rendezes-select:focus {
+    border-color: var(--accent-primary);
+  }
+  thead th[data-sort] {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s ease;
+  }
+  thead th[data-sort]:hover {
+    color: var(--text-main);
+  }
+  thead th.aktiv-sort {
+    color: #a5b4fc;
+  }
+
+  /* --- Responsive Data Table (modern-web-guidance: responsive-table) --- */
+  .table-wrapper {
+    overflow: auto;
+    max-inline-size: 100%;
+    max-block-size: min(740px, 76vh);
+    container-type: inline-size;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    background: rgba(9, 12, 20, 0.55);
+  }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13.5px;
+    table-layout: fixed;
+    --label-2: "Dátum";
+    --label-3: "Platform";
+    --label-4: "Kategória";
+    --label-5: "AI Összefoglaló & Tippek";
+    --label-6: "Kinyert Elemek";
+  }
+  .o-fiok { width: 155px; }
+  .o-datum { width: 102px; }
+  .o-platform { width: 98px; }
+  .o-kategoria { width: 170px; }
+  .o-szovegek { width: 210px; }
+
+  thead {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 2;
+    background: #0b0f1a;
+  }
+  thead th {
+    text-align: left;
+    color: var(--text-dim);
+    font: 600 11px "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  tbody tr {
+    background: transparent;
+    transition: background 0.18s ease;
+    cursor: pointer;
+  }
+  tbody th, tbody td {
+    padding: 13px 14px;
+    vertical-align: top;
+    text-align: left;
+    font-weight: 400;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  }
+  tbody th {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 1;
+    background: var(--bg-surface-solid);
+    font-weight: 600;
+    color: var(--text-main);
+    border-right: 1px solid rgba(148, 163, 184, 0.08);
+  }
+  tbody tr:hover th, tbody tr:hover td {
+    background: rgba(99, 102, 241, 0.09);
+  }
+
+  @container (width < 680px) {
+    table, thead, tbody, tr, th, td {
+      display: block;
+      width: 100% !important;
+    }
+    thead {
+      /* MANDATORY: Hide column header from layout and screen readers. */
+      display: none;
+    }
+    tbody tr {
+      margin-block-end: 1rem;
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--bg-surface);
+    }
+    tbody th {
+      position: sticky;
+      inset-block-start: 0;
+      z-index: 2;
+      background: #161d2f;
+      border: 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    tbody td {
+      border: 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+      padding: 9px 13px;
+    }
+    tbody td:nth-child(2)::before {
+      content: var(--label-2) ": " / var(--label-2);
+      font-weight: 600; color: var(--text-muted); font-size: 12px;
+    }
+    tbody td:nth-child(3)::before {
+      content: var(--label-3) ": " / var(--label-3);
+      font-weight: 600; color: var(--text-muted); font-size: 12px;
+    }
+    tbody td:nth-child(4)::before {
+      content: var(--label-4) ": " / var(--label-4);
+      font-weight: 600; color: var(--text-muted); font-size: 12px;
+    }
+    tbody td:nth-child(5)::before {
+      content: var(--label-5) ": " / var(--label-5);
+      display: block; font-weight: 600; color: var(--text-muted); font-size: 12px; margin-bottom: 3px;
+    }
+    tbody td:nth-child(6)::before {
+      content: var(--label-6) ": " / var(--label-6);
+      display: block; font-weight: 600; color: var(--text-muted); font-size: 12px; margin-bottom: 3px;
+    }
+  }
+
+  /* --- Bento Card Grid View --- */
+  .bento-racs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 16px;
+  }
+  .video-kartya {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 18px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.18s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .video-kartya:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+    box-shadow: 0 14px 34px -10px rgba(0, 0, 0, 0.55);
+  }
+
+  /* --- Badges & Pills --- */
+  .jelvny {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .kat-Informatika {
+    border-color: rgba(6, 182, 212, 0.45);
+    color: #67e8f9;
+    background: rgba(6, 182, 212, 0.12);
+  }
+  .kat-Tananyag {
+    border-color: rgba(139, 92, 246, 0.45);
+    color: #c4b5fd;
+    background: rgba(139, 92, 246, 0.12);
+  }
+  .kat-Mindkettő {
+    border-color: rgba(245, 158, 11, 0.45);
+    color: #fcd34d;
+    background: rgba(245, 158, 11, 0.12);
+  }
+  .kat-Egyéb { border-color: var(--border-subtle); color: var(--text-muted); }
+  .kat-Bizonytalan { border-color: rgba(100, 116, 139, 0.4); color: var(--text-dim); }
+
+  .mini-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font: 500 11px "JetBrains Mono", monospace;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin: 2px 4px 2px 0;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.32);
+    color: #fcd34d;
+  }
+  .mini-pill.kek {
+    background: rgba(6, 182, 212, 0.12);
+    border-color: rgba(6, 182, 212, 0.32);
+    color: #67e8f9;
+  }
+  .mini-pill.lila {
+    background: rgba(139, 92, 246, 0.14);
+    border-color: rgba(139, 92, 246, 0.35);
+    color: #d8b4fe;
+  }
+
+  .van { color: var(--accent-emerald); }
+  .nincs { color: var(--text-dim); }
+  .kicsi { color: var(--text-muted); font-size: 12.5px; }
+  .apro { font-size: 11px; color: var(--text-dim); letter-spacing: 0.2px; }
+  .vago {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: #e2e8f0;
+    overflow-wrap: anywhere;
+  }
+  .apro, .jelvny { overflow-wrap: anywhere; }
+  .elemzett { color: #34d399; font-size: 11px; font-weight: 500; margin-top: 4px; }
+
+  /* --- Top-Layer Modal Dialog (modern-web-guidance: light-dismiss-a-dialog & animate-to-from-top-layer) --- */
+  dialog {
+    background: linear-gradient(180deg, #131929, #0b0f19);
+    color: var(--text-main);
+    border: 1px solid var(--border-strong);
+    border-radius: 20px;
+    max-width: 920px;
+    width: 94%;
+    padding: 0;
+    box-shadow: var(--shadow-lg), 0 0 80px -20px rgba(99, 102, 241, 0.4);
+    opacity: 0;
+    transform: scale(0.94);
+    /* MANDATORY: transition display and overlay for top-layer elements */
+    transition-property: opacity, transform, display, overlay;
+    transition-duration: 0.26s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    transition-behavior: allow-discrete;
+  }
+  dialog::backdrop {
+    background-color: rgba(3, 5, 10, 0);
+    backdrop-filter: blur(0px);
+    transition-property: background-color, backdrop-filter, display, overlay;
+    transition-duration: 0.26s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+  }
+  :is(dialog[open]):where(:not([data-closing])) {
+    opacity: 1;
+    transform: scale(1);
+    @starting-style {
+      opacity: 0;
+      transform: scale(0.94);
+    }
+    &::backdrop {
+      background-color: rgba(3, 5, 10, 0.76);
+      backdrop-filter: blur(6px);
+      @starting-style {
+        background-color: rgba(3, 5, 10, 0);
+        backdrop-filter: blur(0px);
+      }
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    dialog {
+      transform: none;
+      transition-duration: 0.1s;
+    }
+    @starting-style {
+      dialog[open] { transform: none; }
+    }
+  }
+
+  .fej {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: start;
+    background: rgba(15, 20, 32, 0.6);
+  }
+  .fej h2 {
+    margin: 0 0 4px;
+    font: 700 20px "Space Grotesk", sans-serif;
+  }
+  .test {
+    padding: 22px 24px;
+    max-height: 74vh;
+    overflow: auto;
+  }
+  .test h3 {
+    margin: 22px 0 10px;
+    font: 600 11.5px "JetBrains Mono", monospace;
+    letter-spacing: 0.9px;
+    text-transform: uppercase;
+    color: #a5b4fc;
+  }
+  .test h3:first-child { margin-top: 0; }
+  .test pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+    font: 13.5px/1.65 "Inter", sans-serif;
+    background: rgba(6, 8, 15, 0.72);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .test pre.elemzes {
+    border-color: rgba(99, 102, 241, 0.35);
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.09), rgba(6, 8, 15, 0.75));
+  }
+  .kartya-racs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+  }
+  .link-kartya {
+    background: rgba(6, 8, 15, 0.75);
+    border: 1px solid var(--border-subtle);
+    border-radius: 11px;
+    padding: 11px 13px;
+    font-size: 13px;
+    transition: border-color 0.2s ease;
+  }
+  .link-kartya:hover { border-color: var(--accent-cyan); }
+  .link-kartya b { display: block; color: #67e8f9; margin-bottom: 3px; }
+  .prompt-doboz {
+    position: relative;
+    background: rgba(6, 8, 15, 0.85);
+    border: 1px solid rgba(139, 92, 246, 0.42);
+    border-radius: 12px;
+    padding: 13px 105px 13px 14px;
+    margin-bottom: 9px;
+    font: 13px/1.6 "JetBrains Mono", monospace;
+    color: #e9d5ff;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .masol-gomb {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 5px 11px;
+    font-size: 11.5px;
+    border-radius: 8px;
+  }
+  .zar {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 9px;
+    line-height: 1;
+    box-shadow: none;
+  }
+  .zar:hover { color: #fff; border-color: var(--accent-rose); transform: none; }
+
+  .allapotok { margin-top: 10px; font-size: 12.5px; }
+  .allapotok div {
+    padding: 8px 12px;
+    border-radius: 9px;
+    margin-bottom: 6px;
+    background: rgba(6, 8, 15, 0.65);
+    border: 1px solid var(--border-subtle);
+    overflow-wrap: anywhere;
+  }
+  .allapotok .a-kesz { border-color: rgba(16, 185, 129, 0.4); }
+  .allapotok .a-fut, .allapotok .a-var { border-color: rgba(245, 158, 11, 0.4); }
+  .allapotok .a-hiba { border-color: rgba(244, 63, 94, 0.45); color: #fda4af; }
+
+  a { color: #818cf8; text-decoration: none; }
+  a:hover { text-decoration: underline; color: #a5b4fc; }
+  .ures { text-align: center; padding: 54px 20px; color: var(--text-dim); }
+  .rejtett { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="brand-logo">V</div>
+    <div>
+      <h1>Videótár AI <span class="badge-live">Supabase Live</span></h1>
+    </div>
+  </div>
+  <div class="statok" id="statok"></div>
+  <div id="fejlec-gombok" class="sor rejtett" style="margin-top:0">
+    <button type="button" id="ig-beallit-gomb" class="gomb-masodlagos" style="border-color:rgba(244,63,94,0.45);color:#fda4af">📸 Insta Saved Automata</button>
+    <button type="button" id="nezet-tabla" class="gomb-masodlagos aktiv">Táblázat</button>
+    <button type="button" id="nezet-kartya" class="gomb-masodlagos">Kártyák</button>
+    <button type="button" id="export-csv" class="gomb-masodlagos">⬇ CSV Export</button>
+    <button type="button" id="kilep-gomb" class="gomb-masodlagos">Kijelentkezés</button>
+  </div>
+</header>
+
+<!-- 1. BEJELENTKEZŐ KÉPERNYŐ -->
+<section id="login-wrap">
+  <form class="login-kartya" id="login-form">
+    <div class="badge-live" style="margin-bottom:14px">Supabase Auth · RLS Védett</div>
+    <h2>Belépés a Videótárba</h2>
+    <p>Jelentkezz be az AI által kinyert linkek, tippek, kulcsszavak és promptok eléréséhez.</p>
+    <div class="mezo">
+      <label for="login-email">E-mail cím</label>
+      <input type="email" id="login-email" required autocomplete="email"
+             value="berecz.balazs2009@gmail.com"
+             placeholder="berecz.balazs2009@gmail.com">
+    </div>
+    <div class="mezo">
+      <label for="login-jelszo">Jelszó</label>
+      <input type="password" id="login-jelszo" required autocomplete="current-password"
+             placeholder="••••••••••••">
+    </div>
+    <div class="sor" style="margin-top:20px">
+      <button type="submit" id="login-gomb" style="width:100%">Bejelentkezés →</button>
+    </div>
+    <p class="kicsi" id="login-hiba" style="color:var(--accent-rose);margin:12px 0 0"></p>
+  </form>
+</section>
+
+<!-- 2. FŐ ALKALMAZÁS (csak bejelentkezés után látható) -->
+<main id="app-main" class="rejtett">
+  <div class="bento-top">
+    <div class="lap">
+      <div class="lap-fejlec">
+        <h2 class="lap-cim">✨ Új Videó URL Beküldése AI Elemzésre</h2>
+        <span class="apro">YouTube · TikTok · Instagram Reels · X</span>
+      </div>
+      <label for="urlek">Illeszd be a videó URL-eket (soronként egyet):</label>
+      <textarea id="urlek" rows="2"
+        placeholder="https://www.youtube.com/watch?v=... vagy https://www.instagram.com/p/..."></textarea>
+      <div class="sor">
+        <button id="kuld">🚀 Sorba állítás AI elemzésre</button>
+        <span class="kicsi" id="uzenet"></span>
+      </div>
+    </div>
+
+    <div class="lap">
+      <div class="lap-fejlec">
+        <h2 class="lap-cim">⏱️ Várólista &amp; Napi Ütemezések</h2>
+        <span class="badge-live">00:00 Insta · 09:00 AI</span>
+      </div>
+      <p class="kicsi" style="margin:0 0 8px">
+        <b>00:00 (Éjfél):</b> Az Instagram Saved videók automatikusan bekerülnek a <code>varolista</code> sorba.<br>
+        <b>09:00 (Reggel):</b> A géped letölti és AI-jal kielemzi a sorban álló videókat.
+      </p>
+      <div class="allapotok" id="sor"></div>
+    </div>
+  </div>
+
+  <div class="lap">
+    <div class="lap-fejlec">
+      <label for="kereso" style="margin:0">🔍 Gyorskeresés a videók, kinyert linkek, tippek, kulcsszavak, promptok és átiratok között (nyomj <code>/</code>-t)</label>
+      <span class="kicsi" id="lablec"></span>
+    </div>
+    <input type="text" id="kereso" autocomplete="off"
+           placeholder="Keresés: pl. prompt, claude, figma, 21st.dev, animáció, python, deriválás…">
+    <div class="szuro-sor">
+      <div class="szuro-csoport">
+        <span class="szuro-cimke">Platform:</span>
+        <div class="szurok" id="platform-szurok"></div>
+      </div>
+      <div class="szuro-csoport">
+        <span class="szuro-cimke">Rendezés:</span>
+        <select id="rendezes" class="rendezes-select" aria-label="Rendezés">
+          <option value="datum_desc" selected>📅 Dátum szerint (legújabb elöl)</option>
+          <option value="datum_asc">📅 Dátum szerint (legrégebbi elöl)</option>
+          <option value="platform_asc">🌐 Platform szerint (A–Z)</option>
+          <option value="kategoria_asc">🏷️ Kategória szerint (A–Z)</option>
+          <option value="fiok_asc">👤 Fiók / Szerző szerint (A–Z)</option>
+        </select>
+      </div>
+    </div>
+    <div class="szuro-sor">
+      <div class="szuro-csoport">
+        <span class="szuro-cimke">Kategória:</span>
+        <div class="szurok" id="szurok"></div>
+      </div>
+      <div class="szurok" id="extra-szurok">
+        <button type="button" class="szuro" data-extra="link">🔗 Csak linkes</button>
+        <button type="button" class="szuro" data-extra="prompt">📋 Csak promptos</button>
+        <button type="button" class="szuro" data-extra="tipp">💡 Csak tippes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Táblázat nézet -->
+  <div class="table-wrapper" id="tabla-kontener">
+    <table>
+      <thead>
+        <tr>
+          <th class="o-fiok" data-sort="fiok">Fiók / Szerző</th>
+          <th class="o-datum aktiv-sort" data-sort="datum" id="th-datum">Dátum ↓</th>
+          <th class="o-platform" data-sort="platform">Platform</th>
+          <th class="o-kategoria" data-sort="kategoria">Kategória &amp; Altéma</th>
+          <th>AI Összefoglaló &amp; Fontos Tippek</th>
+          <th class="o-szovegek">Linkek · Promptok · Kulcsszavak</th>
+        </tr>
+      </thead>
+      <tbody id="tabla"></tbody>
+    </table>
+  </div>
+
+  <!-- Kártya (Bento) nézet -->
+  <div class="bento-racs rejtett" id="kartya-kontener"></div>
+</main>
+
+<!-- MANDATORY: Use closedby="any" to enable light-dismiss behavior -->
+<dialog id="reszlet" closedby="any" aria-labelledby="r-cim">
+  <div class="fej">
+    <div>
+      <h2 id="r-cim"></h2>
+      <div class="kicsi" id="r-alcim"></div>
+    </div>
+    <button type="button" class="zar" id="zarbtn" aria-label="Bezárás">×</button>
+  </div>
+  <div class="test" id="r-test"></div>
+</dialog>
+
+<dialog id="ig-dialog" closedby="any" aria-labelledby="ig-cim">
+  <div class="fej">
+    <div>
+      <h2 id="ig-cim">📸 Instagram Saved (Mentések) — Éjféli Automata</h2>
+      <div class="kicsi">Minden éjfélkor (<b>00:00</b>) a <code>ig_saved_sync.py</code> behúzza az új mentett videókat a várólistára, reggel <b>09:00</b>-kor pedig az AI kielemzi őket.</div>
+    </div>
+    <button type="button" class="zar" id="ig-zarbtn" aria-label="Bezárás">×</button>
+  </div>
+  <div class="test">
+    <h3>Hogyan működik (API kulcs nélkül, 30 másodperc alatt)?</h3>
+    <pre>1. Nyisd meg gépen az instagram.com oldalt (legyél bejelentkezve), majd nyomj F12-t (Fejlesztői eszköztár).
+2. Kattints felül az "Application" (Alkalmazás) fülre → bal oldalon "Cookies" → "https://www.instagram.com".
+3. Keresd meg a "sessionid" nevű sort, másold ki a "Value" (Érték) oszlop tartalmát, és illeszd be ide alább!</pre>
+    <div style="margin-top:16px">
+      <label for="ig-sessionid-input">Instagram <code>sessionid</code> süti értéke:</label>
+      <input type="password" id="ig-sessionid-input" placeholder="pl. 1234567890%3Aabcdef123456%3A28%3AAY...">
+    </div>
+    <div class="sor" style="margin-top:14px">
+      <button type="button" id="ig-ment-gomb">💾 SessionID Mentése a Supabase-be</button>
+      <span class="kicsi" id="ig-ment-uzenet"></span>
+    </div>
+    <h3>Utolsó szinkronizálás állapota</h3>
+    <pre id="ig-allapot-doboz">Még nem futott szinkronizálás.</pre>
+  </div>
+</dialog>
+
+<script>
+const SUPABASE_URL = "https://feniztijwdhvbabcvply.supabase.co";
+const SUPABASE_KEY = "sb_publishable_xiLVactsEohzx0MlZPePkQ_iku77sO9";
+const TOKEN_STORAGE_KEY = "videotar_supa_token";
+
+const OSZLOPOK = [
+  "id", "platform", "url", "video_id", "author", "title",
+  "caption", "transcript", "onscreen_text", "duration_sec", "published_at",
+  "saved_at", "kategoria", "altema", "konfidencia", "note", "hashtags",
+  "notes(kind,content,meta)"
+].join(",");
+
+const $ = s => document.querySelector(s);
+const KATEGORIAK = ["Informatika","Tananyag","Mindkettő","Egyéb","Bizonytalan"];
+const PLATFORM_IKON = {
+  instagram: "📸 Instagram",
+  tiktok: "🎵 TikTok",
+  youtube: "▶️ YouTube",
+  facebook: "📘 Facebook"
+};
+let mind = [], szuro = "", platformSzuro = "", extraSzuro = "", rendezes = "datum_desc", nezet = "tabla";
+let ujraIdozito, keresoIdozito, sorIdozito, adatIdozito;
+
+function getToken(){
+  return localStorage.getItem(TOKEN_STORAGE_KEY) || "";
+}
+function setToken(tok){
+  if (tok) localStorage.setItem(TOKEN_STORAGE_KEY, tok);
+  else localStorage.removeItem(TOKEN_STORAGE_KEY);
+}
+function supaHeaders(extra = {}){
+  const tok = getToken();
+  return Object.assign({
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + (tok || SUPABASE_KEY),
+    "Accept": "application/json"
+  }, extra);
+}
+
+function ovatos(s){
+  return (s||"").replace(/[&<>"]/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+// Kliens-oldali struktúra-kinyerő (hogy közvetlen Supabase REST hívással is 100%-os legyen)
+function kinyerStruktura(r, elemzesSzoveg, metaObj) {
+  const m = metaObj && typeof metaObj === "object" ? metaObj : {};
+  const osszesSzoveg = [
+    elemzesSzoveg || "",
+    r.caption || "",
+    r.onscreen_text || "",
+    r.transcript || ""
+  ].join("\n");
+
+  let linkek = Array.isArray(m.linkek) ? [...m.linkek] : [];
+  if (!linkek.length) {
+    const urlRegex = /https?:\/\/[^\s)"'<>]+/gi;
+    const talaltUrlek = osszesSzoveg.match(urlRegex) || [];
+    const egyedi = new Set();
+    for (const nyersUrl of talaltUrlek) {
+      const tiszta = nyersUrl.replace(/[.,;!?]+$/, "");
+      if (
+        tiszta.includes("instagram.com/p/") ||
+        tiszta.includes("tiktok.com/@") ||
+        egyedi.has(tiszta.toLowerCase())
+      ) continue;
+      egyedi.add(tiszta.toLowerCase());
+      try {
+        const u = new URL(tiszta);
+        linkek.push({ nev: u.hostname.replace(/^www\./, ""), url: tiszta, mire_jo: "" });
+      } catch {
+        linkek.push({ nev: tiszta, url: tiszta, mire_jo: "" });
+      }
+    }
+    const domainRegex = /\b([a-z0-9-]+\.(?:ai|io|dev|app|so|com|org|hu|in))\b/gi;
+    let dm;
+    while ((dm = domainRegex.exec(osszesSzoveg)) !== null) {
+      const dom = dm[1].toLowerCase();
+      if (["instagram.com","tiktok.com","youtube.com","youtu.be","facebook.com"].includes(dom)) continue;
+      const teljes = `https://${dom}`;
+      if (!egyedi.has(teljes)) {
+        egyedi.add(teljes);
+        linkek.push({ nev: dom, url: teljes, mire_jo: "" });
+      }
+    }
+  }
+
+  let tippek = Array.isArray(m.tippek) && m.tippek.length
+    ? [...m.tippek]
+    : Array.isArray(m.kulcspontok) ? [...m.kulcspontok] : [];
+  if (!tippek.length && elemzesSzoveg) {
+    tippek = elemzesSzoveg
+      .split(/\r?\n/)
+      .map(s => s.trim())
+      .filter(s => s.startsWith("•") || s.startsWith("- "))
+      .map(s => s.replace(/^[•\-]\s*/, "").trim())
+      .filter(Boolean);
+  }
+
+  let promptok = Array.isArray(m.promptok) ? [...m.promptok] : [];
+  if (!promptok.length) {
+    for (const t of tippek) {
+      if (/prompt/i.test(t)) promptok.push(t);
+    }
+    for (const cs of (r.caption || "").split(/\r?\n/)) {
+      if (/prompt\s*[:\-]/i.test(cs) && cs.trim().length > 15) promptok.push(cs.trim());
+    }
+  }
+
+  let kulcsszavak = Array.isArray(m.kulcsszavak) ? [...m.kulcsszavak] : [];
+  if (!kulcsszavak.length) {
+    const kwSet = new Set();
+    if (r.altema) {
+      r.altema.split(/[\-\/,]/).map(s => s.trim()).filter(Boolean).forEach(s => kwSet.add(s));
+    }
+    if (Array.isArray(r.hashtags)) {
+      r.hashtags.slice(0, 8).forEach(h => kwSet.add(String(h).replace(/^#/, "")));
+    }
+    kulcsszavak = Array.from(kwSet);
+  }
+
+  return { linkek, tippek, kulcsszavak, promptok };
+}
+
+function sorKonvertal(r) {
+  const nap = v => (v ? String(v).slice(0, 10) : "");
+  let datum = nap(r.published_at);
+  let fajta = "feltöltve";
+  if (!datum) {
+    datum = nap(r.saved_at);
+    fajta = datum ? "mentve" : "";
+  }
+  const elemzesNote = (r.notes || []).find(n => n.kind === "elemzes");
+  const elemzes = elemzesNote ? elemzesNote.content || "" : (r.elemzes || "");
+  const metaObj = elemzesNote ? elemzesNote.meta : (r.elemzes_meta || null);
+  const { linkek, tippek, kulcsszavak, promptok } = kinyerStruktura(r, elemzes, metaObj);
+
+      return {
+    id: r.id,
+    platform: (r.platform || "").toLowerCase(),
+    url: r.url,
+    fiok: r.author || r.fiok || "",
+    cim: r.title || r.cim || "",
+    caption: r.caption || "",
+    atirat: r.transcript || r.atirat || "",
+    kepszoveg: r.onscreen_text || r.kepszoveg || "",
+    elemzes,
+    linkek: r.linkek || linkek,
+    tippek: r.tippek || tippek,
+    kulcsszavak: r.kulcsszavak || kulcsszavak,
+    promptok: r.promptok || promptok,
+    hossz: r.duration_sec || r.hossz,
+    datum: r.datum || datum,
+    nyers_datum: r.published_at || r.saved_at || r.datum || datum || "",
+    datum_fajta: r.datum_fajta || fajta,
+    kategoria: r.kategoria || "",
+    altema: r.altema || "",
+    megjegyzes: r.note || r.megjegyzes || ""
+  };
+}
+
+// --- Bejelentkezés ---
+function mutasdBelepve(belepve){
+  $("#login-wrap").classList.toggle("rejtett", belepve);
+  $("#app-main").classList.toggle("rejtett", !belepve);
+  $("#fejlec-gombok").classList.toggle("rejtett", !belepve);
+  if (belepve){
+    tolt();
+    sorFrissit();
+    clearInterval(adatIdozito);
+    clearInterval(sorIdozito);
+    adatIdozito = setInterval(tolt, 20000);
+    sorIdozito = setInterval(sorFrissit, 8000);
+  } else {
+    clearInterval(adatIdozito);
+    clearInterval(sorIdozito);
+    $("#statok").innerHTML = "";
+  }
+}
+
+$("#login-form").onsubmit = async (e) => {
+  e.preventDefault();
+  const email = $("#login-email").value.trim();
+  const password = $("#login-jelszo").value;
+  $("#login-gomb").disabled = true;
+  $("#login-hiba").textContent = "";
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.access_token) {
+      throw new Error(d.error_description || d.msg || "Hibás e-mail cím vagy jelszó.");
+    }
+    setToken(d.access_token);
+    mutasdBelepve(true);
+  } catch (err) {
+    $("#login-hiba").textContent = err.message;
+  } finally {
+    $("#login-gomb").disabled = false;
+  }
+};
+
+$("#kilep-gomb").onclick = () => {
+  setToken("");
+  mutasdBelepve(false);
+};
+
+// Nézetváltók és CSV export
+$("#nezet-tabla").onclick = () => {
+  nezet = "tabla";
+  $("#nezet-tabla").classList.add("aktiv");
+  $("#nezet-kartya").classList.remove("aktiv");
+  $("#tabla-kontener").classList.remove("rejtett");
+  $("#kartya-kontener").classList.add("rejtett");
+  rajzol();
+};
+$("#nezet-kartya").onclick = () => {
+  nezet = "kartya";
+  $("#nezet-kartya").classList.add("aktiv");
+  $("#nezet-tabla").classList.remove("aktiv");
+  $("#kartya-kontener").classList.remove("rejtett");
+  $("#tabla-kontener").classList.add("rejtett");
+  rajzol();
+};
+
+$("#export-csv").onclick = () => {
+  const sorok = szurtLista();
+  const fej = ["ID","Dátum","Platform","Fiók","Kategória","Altéma","Linkek","Kulcsszavak","Promptok","Videó URL"];
+  const csvSorok = [fej.join(";")];
+  for (const t of sorok) {
+    const lks = (t.linkek || []).map(l => l.url || l.nev).join(", ");
+    const kws = (t.kulcsszavak || []).join(", ");
+    const prs = (t.promptok || []).join(" | ").replace(/[\r\n;]+/g, " ");
+    csvSorok.push([
+      t.id, t.datum, t.platform, `"${(t.fiok||"").replace(/"/g,'""')}"`,
+      t.kategoria, `"${(t.altema||"").replace(/"/g,'""')}"`,
+      `"${lks.replace(/"/g,'""')}"`, `"${kws.replace(/"/g,'""')}"`,
+      `"${prs.replace(/"/g,'""')}"`, t.url
+    ].join(";"));
+  }
+  const blob = new Blob(["\uFEFF" + csvSorok.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "videotar_ai_export.csv";
+  a.click();
+};
+
+function statokRajzol(){
+  const elemzes = mind.filter(t => t.elemzes).length;
+  const linkDb = mind.reduce((s, t) => s + ((t.linkek && t.linkek.length) || 0), 0);
+  const promptDb = mind.reduce((s, t) => s + ((t.promptok && t.promptok.length) || 0), 0);
+  $("#statok").innerHTML = `
+    <div class="stat-pill"><b>${mind.length}</b><span>videó</span></div>
+    <div class="stat-pill"><b style="color:#34d399">${elemzes}</b><span>AI elemezve</span></div>
+    <div class="stat-pill"><b style="color:#fcd34d">${linkDb}</b><span>link</span></div>
+    <div class="stat-pill"><b style="color:#d8b4fe">${promptDb}</b><span>prompt</span></div>`;
+}
+
+function szurokRajzol(){
+  // 1. Platform szűrők (az éppen kiválasztott kategórián belüli vagy teljes darabszámmal)
+  const katAlap = szuro ? mind.filter(t => t.kategoria === szuro) : mind;
+  const platSet = Array.from(new Set(mind.map(t => t.platform).filter(Boolean))).sort();
+  const platDb = p => katAlap.filter(t => t.platform === p).length;
+  const platGombok = [["", "🌐 Összes", katAlap.length]]
+    .concat(platSet.map(p => [p, PLATFORM_IKON[p] || p, platDb(p)]));
+
+  $("#platform-szurok").innerHTML = platGombok.map(([ertek, cimke, n]) =>
+    `<button type="button" class="szuro ${platformSzuro===ertek?"plat-aktiv":""}"
+             data-plat="${ovatos(ertek)}">${ovatos(cimke)} <span
+             class="apro">${n}</span></button>`).join("");
+  $("#platform-szurok").querySelectorAll(".szuro").forEach(b =>
+    b.onclick = () => { platformSzuro = b.dataset.plat; szurokRajzol(); rajzol(); });
+
+  // 2. Kategória szűrők (az éppen kiválasztott platformon belüli vagy teljes darabszámmal)
+  const platAlap = platformSzuro ? mind.filter(t => t.platform === platformSzuro) : mind;
+  const db = k => platAlap.filter(t => t.kategoria === k).length;
+  const gombok = [["", "Összes", platAlap.length]]
+    .concat(KATEGORIAK.map(k => [k, k, db(k)]))
+    .filter(([e,,n]) => e === "" || n > 0 || szuro === e);
+  $("#szurok").innerHTML = gombok.map(([ertek, cimke, n]) =>
+    `<button type="button" class="szuro ${szuro===ertek?"aktiv":""}"
+             data-ertek="${ovatos(ertek)}">${ovatos(cimke)} <span
+             class="apro">${n}</span></button>`).join("");
+  $("#szurok").querySelectorAll(".szuro").forEach(b =>
+    b.onclick = () => { szuro = b.dataset.ertek; szurokRajzol(); rajzol(); });
+}
+
+$("#rendezes").onchange = (e) => {
+  rendezes = e.target.value;
+  fejlecSortJeloles();
+  rajzol();
+};
+
+function fejlecSortJeloles(){
+  document.querySelectorAll("thead th[data-sort]").forEach(th => {
+    const col = th.dataset.sort;
+    th.classList.remove("aktiv-sort");
+    if (col === "datum") {
+      if (rendezes === "datum_desc") { th.textContent = "Dátum ↓"; th.classList.add("aktiv-sort"); }
+      else if (rendezes === "datum_asc") { th.textContent = "Dátum ↑"; th.classList.add("aktiv-sort"); }
+      else th.textContent = "Dátum";
+    } else if (col === "platform") {
+      th.textContent = rendezes === "platform_asc" ? "Platform ↑" : "Platform";
+      if (rendezes === "platform_asc") th.classList.add("aktiv-sort");
+    } else if (col === "kategoria") {
+      th.textContent = rendezes === "kategoria_asc" ? "Kategória & Altéma ↑" : "Kategória & Altéma";
+      if (rendezes === "kategoria_asc") th.classList.add("aktiv-sort");
+    } else if (col === "fiok") {
+      th.textContent = rendezes === "fiok_asc" ? "Fiók / Szerző ↑" : "Fiók / Szerző";
+      if (rendezes === "fiok_asc") th.classList.add("aktiv-sort");
+    }
+  });
+}
+
+document.querySelectorAll("thead th[data-sort]").forEach(th => {
+  th.onclick = () => {
+    const col = th.dataset.sort;
+    if (col === "datum") {
+      rendezes = (rendezes === "datum_desc") ? "datum_asc" : "datum_desc";
+    } else if (col === "platform") {
+      rendezes = "platform_asc";
+    } else if (col === "kategoria") {
+      rendezes = "kategoria_asc";
+    } else if (col === "fiok") {
+      rendezes = "fiok_asc";
+    }
+    $("#rendezes").value = rendezes;
+    fejlecSortJeloles();
+    rajzol();
+  };
+});
+
+$("#extra-szurok").querySelectorAll(".szuro").forEach(btn => {
+  btn.onclick = () => {
+    const val = btn.dataset.extra;
+    extraSzuro = (extraSzuro === val) ? "" : val;
+    $("#extra-szurok").querySelectorAll(".szuro").forEach(b =>
+      b.classList.toggle("aktiv", b.dataset.extra === extraSzuro));
+    rajzol();
+  };
+});
+
+// Közvetlen Supabase REST lekérdezés (RLS-sel) + helyi /api/tetelek fallback
+async function tolt(){
+  if (!getToken()) { mutasdBelepve(false); return; }
+  const q = $("#kereso").value.trim();
+  try {
+    const params = new URLSearchParams();
+    params.set("select", OSZLOPOK);
+    params.set("order", "published_at.desc.nullslast,saved_at.desc.nullslast");
+    params.set("limit", "600");
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/sources?${params}`, {
+      headers: supaHeaders()
+    });
+    if (r.status === 401 || r.status === 403) {
+      setToken("");
+      mutasdBelepve(false);
+      return;
+    }
+    if (!r.ok) throw new Error("Supabase HTTP " + r.status);
+    const nyersSorok = await r.json();
+    let konvertalt = nyersSorok.map(sorKonvertal);
+    if (q) {
+      const ql = q.toLowerCase();
+      konvertalt = konvertalt.filter(t =>
+        [
+          t.fiok, t.cim, t.caption, t.atirat, t.kepszoveg, t.elemzes,
+          t.kategoria, t.altema,
+          ...(t.kulcsszavak || []),
+          ...(t.promptok || []),
+          ...(t.linkek || []).map(l => `${l.nev} ${l.url} ${l.mire_jo}`)
+        ].join(" ").toLowerCase().includes(ql)
+      );
+    }
+    mind = konvertalt;
+    statokRajzol();
+    szurokRajzol();
+    rajzol();
+  } catch (e) {
+    $("#lablec").textContent = "Kapcsolódási hiba: " + e.message;
+    clearTimeout(ujraIdozito);
+    ujraIdozito = setTimeout(tolt, 4000);
+  }
+}
+
+function szurtLista(){
+  let lista = [...mind];
+  if (platformSzuro) lista = lista.filter(t => t.platform === platformSzuro);
+  if (szuro) lista = lista.filter(t => t.kategoria === szuro);
+  if (extraSzuro === "link") lista = lista.filter(t => t.linkek && t.linkek.length > 0);
+  if (extraSzuro === "prompt") lista = lista.filter(t => t.promptok && t.promptok.length > 0);
+  if (extraSzuro === "tipp") lista = lista.filter(t => t.tippek && t.tippek.length > 0);
+
+  // Alapértelmezett rendezés: egységesített dátum szerint (legújabb elöl)
+  lista.sort((a, b) => {
+    const da = a.datum || "0000-00-00";
+    const db = b.datum || "0000-00-00";
+    if (rendezes === "datum_desc") {
+      if (db !== da) return db.localeCompare(da);
+      return (b.id || 0) - (a.id || 0);
+    }
+    if (rendezes === "datum_asc") {
+      if (da !== db) return da.localeCompare(db);
+      return (a.id || 0) - (b.id || 0);
+    }
+    if (rendezes === "platform_asc") {
+      const cmp = (a.platform || "").localeCompare(b.platform || "", "hu");
+      return cmp !== 0 ? cmp : db.localeCompare(da);
+    }
+    if (rendezes === "kategoria_asc") {
+      const cmp = (a.kategoria || "ZZZ").localeCompare(b.kategoria || "ZZZ", "hu");
+      return cmp !== 0 ? cmp : db.localeCompare(da);
+    }
+    if (rendezes === "fiok_asc") {
+      const cmp = (a.fiok || "ZZZ").localeCompare(b.fiok || "ZZZ", "hu");
+      return cmp !== 0 ? cmp : db.localeCompare(da);
+    }
+    return db.localeCompare(da);
+  });
+
+  return lista;
+}
+
+function rajzol(){
+  const lista = szurtLista();
+  $("#lablec").textContent =
+    `${lista.length} videó megjelenítve (${mind.length} összesen)`;
+
+  if (!lista.length){
+    $("#tabla").innerHTML =
+      `<tr><td colspan="6" class="ures">Nincs a szűrésnek megfelelő videó.</td></tr>`;
+    $("#kartya-kontener").innerHTML = `<div class="ures">Nincs a szűrésnek megfelelő videó.</div>`;
+    return;
+  }
+
+  // 1. Táblázat renderelése
+  $("#tabla").innerHTML = lista.map((t,i) => {
+    const linkDb = (t.linkek && t.linkek.length) || 0;
+    const tippDb = (t.tippek && t.tippek.length) || 0;
+    const promptDb = (t.promptok && t.promptok.length) || 0;
+    const kwDb = (t.kulcsszavak && t.kulcsszavak.length) || 0;
+    const kivonat = (t.elemzes || t.caption || t.cim || "(nincs szöveg)").split("\n")[0];
+    return `
+    <tr data-i="${i}">
+      <th scope="row">${ovatos(t.fiok || "—")}</th>
+      <td>${ovatos(t.datum) || "—"}
+          <div class="apro">${ovatos(t.datum_fajta)}</div></td>
+      <td><span class="jelvny">${ovatos(t.platform)}</span></td>
+      <td>${t.kategoria
+            ? `<span class="jelvny kat-${ovatos(t.kategoria)}">${ovatos(t.kategoria)}</span>
+               <div class="apro" style="margin-top:3px">${ovatos(t.altema)}</div>`
+            : '<span class="nincs">—</span>'}
+          ${t.elemzes ? '<div class="elemzett">✓ AI elemezve</div>' : ""}</td>
+      <td><div class="vago">${ovatos(kivonat)}</div></td>
+      <td class="kicsi">
+        ${linkDb ? `<span class="mini-pill">🔗 ${linkDb} link</span>` : ""}
+        ${tippDb ? `<span class="mini-pill kek">💡 ${tippDb} tipp</span>` : ""}
+        ${promptDb ? `<span class="mini-pill lila">📋 ${promptDb} prompt</span>` : ""}
+        ${kwDb ? `<div class="apro" style="margin-top:4px">🏷️ ${ovatos(t.kulcsszavak.slice(0,3).join(", "))}</div>` : ""}
+        ${(!linkDb && !tippDb && !promptDb && !kwDb) ? '<span class="nincs">—</span>' : ""}
+      </td>
+    </tr>`;
+  }).join("");
+
+  $("#tabla").querySelectorAll("tr[data-i]").forEach(tr =>
+    tr.onclick = () => mutat(lista[tr.dataset.i]));
+
+  // 2. Bento Kártyák renderelése
+  $("#kartya-kontener").innerHTML = lista.map((t, i) => {
+    const linkDb = (t.linkek && t.linkek.length) || 0;
+    const tippDb = (t.tippek && t.tippek.length) || 0;
+    const promptDb = (t.promptok && t.promptok.length) || 0;
+    const kivonat = (t.elemzes || t.caption || t.cim || "(nincs szöveg)").split("\n")[0];
+    return `
+    <article class="video-kartya" data-i="${i}">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+        <b>${ovatos(t.fiok || "Ismeretlen")}</b>
+        <span class="jelvny">${ovatos(t.platform)} · ${ovatos(t.datum || "—")}</span>
+      </div>
+      <div>
+        ${t.kategoria ? `<span class="jelvny kat-${ovatos(t.kategoria)}">${ovatos(t.kategoria)}</span>` : ""}
+        <span class="apro" style="margin-left:6px">${ovatos(t.altema)}</span>
+      </div>
+      <div class="vago" style="-webkit-line-clamp:3;font-size:13.5px">${ovatos(kivonat)}</div>
+      <div style="margin-top:auto;padding-top:6px">
+        ${linkDb ? `<span class="mini-pill">🔗 ${linkDb} link</span>` : ""}
+        ${tippDb ? `<span class="mini-pill kek">💡 ${tippDb} tipp</span>` : ""}
+        ${promptDb ? `<span class="mini-pill lila">📋 ${promptDb} prompt</span>` : ""}
+      </div>
+    </article>`;
+  }).join("");
+
+  $("#kartya-kontener").querySelectorAll(".video-kartya[data-i]").forEach(card =>
+    card.onclick = () => mutat(lista[card.dataset.i]));
+}
+
+// --- Top-Layer Modal & Animation Fallbacks (modern-web-guidance) ---
+const reszletDialog = $("#reszlet");
+
+// Fallback for browsers without closedby support (light-dismiss-a-dialog)
+if (!('closedBy' in HTMLDialogElement.prototype)) {
+  reszletDialog.addEventListener('click', (event) => {
+    if (event.target !== reszletDialog) return;
+    const rect = reszletDialog.getBoundingClientRect();
+    const isDialogContent = (
+      rect.top <= event.clientY &&
+      event.clientY <= rect.top + rect.height &&
+      rect.left <= event.clientX &&
+      event.clientX <= rect.left + rect.width
+    );
+    if (isDialogContent) return;
+    closeTopLayer(reszletDialog);
+  });
+}
+
+// Feature detect discrete display transitions (animate-to-from-top-layer)
+let supportsDisplayTransition;
+function canTransitionDisplay() {
+  if (supportsDisplayTransition !== undefined) return supportsDisplayTransition;
+  if (!window.CSS?.supports?.('transition-behavior', 'allow-discrete') || !document.body) {
+    return false;
+  }
+  const probe = document.createElement('div');
+  probe.style.cssText = 'transition: display 1s allow-discrete !important; display: block;';
+  document.body.appendChild(probe);
+  getComputedStyle(probe).display;
+  probe.style.display = 'none';
+  supportsDisplayTransition = getComputedStyle(probe).display === 'block';
+  probe.remove();
+  return supportsDisplayTransition;
+}
+
+function supportsTopLayerExit() {
+  return window.CSS?.supports?.('overlay', 'auto') && canTransitionDisplay();
+}
+
+async function closeTopLayer(element) {
+  if (!supportsTopLayerExit()) {
+    element.setAttribute('data-closing', '');
+    const animations = element.getAnimations({ subtree: true });
+    if (animations.length > 0) {
+      await Promise.race([
+        Promise.allSettled(animations.map((a) => a.finished)),
+        new Promise((r) => setTimeout(r, 2000)),
+      ]);
+    }
+    if (!element.hasAttribute('data-closing')) return;
+    element.removeAttribute('data-closing');
+  }
+  element.close();
+}
+
+reszletDialog.addEventListener('cancel', (event) => {
+  event.preventDefault();
+  closeTopLayer(reszletDialog);
+});
+
+$("#zarbtn").onclick = () => closeTopLayer(reszletDialog);
+
+function mutat(t){
+  $("#r-cim").textContent = (t.fiok || "Videó") + (t.hossz ? ` · ${t.hossz} mp` : "");
+  const kat = t.kategoria
+    ? `<span class="jelvny kat-${ovatos(t.kategoria)}">${ovatos(t.kategoria)}</span>
+       ${ovatos(t.altema)} · ` : "";
+  $("#r-alcim").innerHTML = `${kat}${ovatos(t.datum)} ${ovatos(t.datum_fajta)} ·
+      ${ovatos(t.platform)} ·
+      <a href="${ovatos(t.url)}" target="_blank" rel="noreferrer">Eredeti videó megnyitása ↗</a>`;
+
+  let h = "";
+
+  if (t.linkek && t.linkek.length){
+    h += `<h3>🔗 Kinyert linkek és eszközök (${t.linkek.length})</h3><div class="kartya-racs">`;
+    for (const lk of t.linkek){
+      const nev = ovatos(lk.nev || lk.url || "Link");
+      const url = ovatos(lk.url || "");
+      const mire = ovatos(lk.mire_jo || "");
+      h += `<div class="link-kartya">
+        <b>${url ? `<a href="${url}" target="_blank" rel="noreferrer">${nev} ↗</a>` : nev}</b>
+        ${mire ? `<div class="kicsi">${mire}</div>` : ""}
+      </div>`;
+    }
+    h += `</div>`;
+  }
+
+  if (t.tippek && t.tippek.length){
+    h += `<h3>💡 Fontos tippek és tanácsok</h3><pre class="elemzes">${t.tippek.map(tipp => "• " + ovatos(tipp)).join("\n")}</pre>`;
+  }
+
+  if (t.promptok && t.promptok.length){
+    h += `<h3>📋 Kinyert AI Promptok</h3>`;
+    t.promptok.forEach((pr, idx) => {
+      h += `<div class="prompt-doboz"><button type="button" class="masol-gomb" data-prompt-idx="${idx}">📋 Másolás</button>${ovatos(pr)}</div>`;
+    });
+  }
+
+  if (t.kulcsszavak && t.kulcsszavak.length){
+    h += `<h3>🏷️ Kulcsszavak (kattints a szűréshez)</h3><div>` +
+      t.kulcsszavak.map(kw => `<span class="mini-pill kek" style="cursor:pointer" data-kw="${ovatos(kw)}">#${ovatos(kw)}</span>`).join(" ") +
+      `</div>`;
+  }
+
+  if (t.elemzes)    h += `<h3>📝 Teljes AI elemzés</h3><pre class="elemzes">${ovatos(t.elemzes)}</pre>`;
+  if (t.caption)    h += `<h3>💬 Caption / Leírás</h3><pre>${ovatos(t.caption)}</pre>`;
+  if (t.atirat)     h += `<h3>🎙️ Átirat — beszéd</h3><pre>${ovatos(t.atirat)}</pre>`;
+  if (t.kepszoveg)  h += `<h3>🖥️ Képernyőszöveg (OCR)</h3><pre>${ovatos(t.kepszoveg)}</pre>`;
+  if (t.megjegyzes) h += `<h3>ℹ️ Megjegyzés</h3><pre>${ovatos(t.megjegyzes)}</pre>`;
+
+  $("#r-test").innerHTML = h || '<p class="kicsi">Nincs kinyert szöveg.</p>';
+
+  $("#r-test").querySelectorAll(".masol-gomb").forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const prSzoveg = t.promptok[Number(btn.dataset.promptIdx)] || "";
+      navigator.clipboard.writeText(prSzoveg);
+      btn.textContent = "✓ Másolva!";
+      setTimeout(() => { btn.textContent = "📋 Másolás"; }, 1800);
+    };
+  });
+
+  $("#r-test").querySelectorAll("[data-kw]").forEach(el => {
+    el.onclick = () => {
+      closeTopLayer(reszletDialog);
+      $("#kereso").value = el.dataset.kw;
+      tolt();
+    };
+  });
+
+  reszletDialog.showModal();
+}
+
+// Gyorsbillentyű: '/' a keresőmezőre ugrik
+window.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== $("#kereso") && document.activeElement !== $("#urlek")) {
+    e.preventDefault();
+    $("#kereso").focus();
+  }
+});
+
+$("#kereso").oninput = () => {
+  clearTimeout(keresoIdozito);
+  keresoIdozito = setTimeout(tolt, 220);
+};
+
+// Közvetlen Supabase varolista beküldés (RLS-sel)
+$("#kuld").onclick = async () => {
+  const nyers = $("#urlek").value;
+  const urlek = nyers
+    .replace(/,/g, "\n")
+    .split("\n")
+    .map(u => u.trim())
+    .filter(u => /^https?:\/\//i.test(u))
+    .slice(0, 20);
+
+  if (!urlek.length) {
+    $("#uzenet").textContent = "Adj meg érvényes http(s):// videó linket!";
+    return;
+  }
+  $("#kuld").disabled = true;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/varolista`, {
+      method: "POST",
+      headers: supaHeaders({
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+      }),
+      body: JSON.stringify(urlek.map(url => ({ url, forras: "online" })))
+    });
+    if (!r.ok) throw new Error("Supabase HTTP " + r.status);
+    const beirt = await r.json();
+    $("#uzenet").textContent = `✓ ${beirt.length} link hozzáadva a várólistához!`;
+    $("#urlek").value = "";
+  } catch (e) {
+    $("#uzenet").textContent = "Nem sikerült elküldeni: " + e.message;
+  }
+  $("#kuld").disabled = false;
+  sorFrissit();
+};
+
+let elozoKesz = -1;
+async function sorFrissit(){
+  if (!getToken()) return;
+  try {
+    const p = new URLSearchParams({
+      select: "id,url,allapot,hiba,hozzaadva,feldolgozva",
+      order: "hozzaadva.desc",
+      limit: "6"
+    });
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/varolista?${p}`, {
+      headers: supaHeaders()
+    });
+    if (!r.ok) return;
+    const sorok = await r.json();
+    const oszt = a => a === "kesz" ? "a-kesz" : (a === "hiba" ? "a-hiba" : "a-var");
+    const cimke = {var:"⏳ sorban áll", fut:"⚡ feldolgozás alatt", kesz:"✓ kész", hiba:"✗ hiba"};
+    $("#sor").innerHTML = sorok.map(m => `
+      <div class="${oszt(m.allapot)}">
+        <b>${ovatos(cimke[m.allapot] || m.allapot)}</b> —
+        ${ovatos(String(m.url).slice(0, 58))}
+        ${m.hiba ? `<div class="apro" style="margin-top:2px">${ovatos(String(m.hiba).slice(0, 85))}</div>` : ""}
+      </div>`).join("");
+    const kesz = sorok.filter(m => m.allapot === "kesz").length;
+    if (elozoKesz >= 0 && kesz !== elozoKesz) tolt();
+    elozoKesz = kesz;
+  } catch (e) { return; }
+}
+
+mutasdBelepve(Boolean(getToken()));
+
+// --- Instagram Saved Automata Beállítások ---
+const igDialog = $("#ig-dialog");
+$("#ig-zarbtn").onclick = () => closeTopLayer(igDialog);
+igDialog.addEventListener('cancel', (event) => {
+  event.preventDefault();
+  closeTopLayer(igDialog);
+});
+
+$("#ig-beallit-gomb").onclick = async () => {
+  $("#ig-ment-uzenet").textContent = "";
+  igDialog.showModal();
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/beallitasok?select=kulcs,ertek,frissitve`, {
+      headers: supaHeaders()
+    });
+    if (r.ok) {
+      const sorok = await r.json();
+      const sid = sorok.find(s => s.kulcs === "ig_sessionid");
+      const allapot = sorok.find(s => s.kulcs === "ig_saved_allapot");
+      if (sid && sid.ertek) {
+        $("#ig-sessionid-input").placeholder = "✓ Beállítva (" + sid.ertek.slice(0, 6) + "•••) — felülíráshoz illessz be újat";
+      }
+      if (allapot && allapot.ertek) {
+        $("#ig-allapot-doboz").textContent = allapot.ertek;
+      }
+    }
+  } catch (e) {}
+};
+
+$("#ig-ment-gomb").onclick = async () => {
+  const ertek = $("#ig-sessionid-input").value.trim();
+  if (!ertek) {
+    $("#ig-ment-uzenet").textContent = "Illeszd be a sessionid értékét!";
+    return;
+  }
+  $("#ig-ment-gomb").disabled = true;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/beallitasok`, {
+      method: "POST",
+      headers: supaHeaders({
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates,return=representation"
+      }),
+      body: JSON.stringify([{ kulcs: "ig_sessionid", ertek }])
+    });
+    if (!r.ok) throw new Error("Supabase HTTP " + r.status);
+    $("#ig-sessionid-input").value = "";
+    $("#ig-ment-uzenet").textContent = "✓ Elmentve! A gépeden futó figyelő és a 09:00-s feladat automatikusan szinkronizálni fogja a mentéseidet.";
+  } catch (e) {
+    $("#ig-ment-uzenet").textContent = "Hiba: " + e.message;
+  } finally {
+    $("#ig-ment-gomb").disabled = false;
+  }
+};
+</script>
+</body>
+</html>
